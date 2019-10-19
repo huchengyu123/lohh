@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        #box{
+            width: 600px;
+            height: 600px;
+
+            background: url("images/clock.jpg") no-repeat;
+            margin: 0px auto;
+            float:left;
+            position: relative;
+        }
+
+        #hour, #min, #second{
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: 30px;
+            height: 600px;
+            margin-left: -15px;
+        }
+
+        #hour{
+            background: url("images/hour.png") no-repeat center center;
+        }
+
+        #min{
+            background: url("images/minute.png") no-repeat center center;
+        }
+
+        #second{
+            background: url("images/second.png") no-repeat center center;
+        }
+        #Text1{
+            border-style:solid;
+            border-color:#98bf21;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="./easyui/uimaker/easyui.css">
+    <link rel="stylesheet" type="text/css" href="./easyui/uimaker/icon.css">
+    <script type="text/javascript" src="./easyui/jquery.min.js"></script>
+    <script type="text/javascript" src="./easyui/jquery.easyui.min.js"></script>
+    <script type="text/javascript" src="./easyui/easyui-lang-zh_CN.js"></script>
+</head>
+<body>
+<div id="box">
+    <div id="hour"></div>
+    <div id="min"></div>
+    <div id="second"></div>
+</div>
+<h2>家族信息添加</h2>
+<textarea id="Text1" placeholder="请粘贴要查询字数的文字" rows="35" cols="100">导师：张三
+2016级博士生：天一、王二、吴五
+2015级硕士生：李四、王五、许六
+2016级硕士生：刘一、李二、李三
+2017级本科生：刘六、琪七、司四</textarea>
+<button onclick="displayDate()">提交</button>
+
+<script>
+    window.onload = function () {
+        // 1. 获取需要的标签
+        var hour = document.getElementById("hour");
+        var min = document.getElementById("min");
+        var second = document.getElementById("second");
+
+        // 2.开启定时器
+        setInterval(function () {
+            // 2.1 获取当前的时间戳
+            var date = new Date();
+
+            // 2.2 求出总毫秒数
+            var millS = date.getMilliseconds();
+            var s = date.getSeconds() + millS / 1000;
+            var m = date.getMinutes() + s / 60;
+            var h = date.getHours() % 12 + m / 60;
+
+            // console.log(s);
+            // console.log(m);
+            // console.log(h);
+
+            // 2.3 旋转
+            hour.style.transform = 'rotate('+ h * 30 +'deg)';
+            min.style.transform = 'rotate('+ m * 6 +'deg)';
+            second.style.transform = 'rotate('+ s * 6 +'deg)';
+        }, 10);
+    }
+</script>
+<br>
+<script>
+    function displayDate() {
+        var boshi = new Array(); var yanjiu = new Array(); var benke = new Array();
+        var tname;   var s;  var judge;
+        var Text = document.getElementById("Text1").value;
+        var lines = Text.split("\n");
+        for(var i=0;i<lines.length;i++){
+            judge=false;
+            s=lines[i].substring(0,3);
+            if(s=="导师："){
+                tname=lines[i].substring(3);
+                console.log(tname);
+
+                //选中当前表格所有节点
+                $('#tt').treegrid('selectAll') ;
+                //获取选中的所有节点 并返回
+                var nodelist=$('#tt').treegrid('getSelections');
+
+                for(var l=0;l<nodelist.length;l++){
+                    //如果要添加的这位导师已存在于树中那么直接在该节点下添加其学生
+                    if(nodelist[l].name==tname){
+                        console.log(nodelist[l].name);
+                        var pid=nodelist[l].id;
+
+                        judge=true;
+                        var kk=i+1; var vv=1;  var str;
+                        s=lines[kk].substring(0,3);
+                        while((s!="导师：")&&(kk<lines.length)){
+                            var childperssesion =lines[kk].substring(4,9);
+                            var stus = (lines[kk].substring(9)).split("、");
+                               console.log(stus);
+                            for(var x =0;x<stus.length;x++){
+                                $('#tt').treegrid('append',{
+                                    parent: pid,  // the node has a 'id' value that defined through 'idField' property
+                                    data: [{
+                                        id:pid+vv++,
+                                        name: stus[x]
+                                    }]
+                                });
+                            }
+                            kk++;
+                            if(kk<lines.length){
+                                s=lines[kk].substring(0,3);
+                            }
+
+                        }
+                    }
+                    //添加其学生节点
+                }
+
+
+                if(!judge){
+
+                    $('#tt').treegrid('selectAll') ;
+                    var nodelist=$('#tt').treegrid('getSelections');
+                    nodelength=nodelist.length;
+                    //给家族树创建一个子节点，并添加其学生节点
+                    //家族树这个节点被选中
+                    /*    $('#tt').treegrid('select',1);
+                        var node = $('#tt').treegrid('getSelected');*/
+                    $('#tt').treegrid('append',{
+                        parent: 1,  // the node has a 'id' value that defined through 'idField' property
+                        data: [{
+                            id:nodelength+2,
+                            name: tname
+                        }]
+                    });
+                    //添加子节点
+                    var k=i+1; var v=1;  var str;
+                    s=lines[k].substring(0,3);
+                    while((s!="导师：")&&(k<lines.length)){
+                        var childperssesion =lines[k].substring(4,9);
+                        var stus = (lines[k].substring(9)).split("、");
+                        /*   alert(stus);*/
+                        for(var j =0;j<stus.length;j++){
+                            $('#tt').treegrid('append',{
+                                parent: nodelength+2,  // the node has a 'id' value that defined through 'idField' property
+                                data: [{
+                                    id:nodelength+2+v++,
+                                    name: stus[j]
+                                }]
+                            });
+                        }
+                        k++;
+                        if(k<lines.length){
+                            s=lines[k].substring(0,3);
+                        }
+                    }
+                }
+            }
+        }
+    }
+</script>
+<table id="tt"></table>
+
+</body>
+<script>
+    $(function () {
+        $('#tt').treegrid({
+            url:'table.json',
+            title: '师门关系',
+            iconCls: 'icon-save',
+            singleSelect:true,
+            /*fit:true,*///这一行去掉就可以显示滚动条 和分页符了
+            idField:'id',  //关键字段来标识树节点，不能重复
+            treeField:'name',  //树节点字段，也就是树节点的名称
+            fitColumns:true,
+            pagination:true,//是否设置分页
+            pageNumber:10,
+            pageSize: 2,
+            pageList: [2, 25, 50, 100],
+            rownumbers:true,//显示一个行号列
+           /* collapsible:true,//收起表格的内容*/
+
+            loadMsg: '数据加载中...',
+            animate:true,//在节点展开或折叠的时候是否显示动画效果
+            lines:true,//显示treegrid行
+            columns:[[
+                {field:'name',title:'家族成员',width:100,align:'left'},
+                {field:'size',title:'学位',width:60,align:'center'},
+                {field:'date',title:'年级',width:80,align:'center'},
+                {field:'teacher',title:'专业',width:60,align:'center'},
+                {field:'room',title:'性别',width:80,align:'center'}
+            ]],
+            onLoadSuccess:function(data){
+                $('#tt').treegrid('expandAll');//全部展开树节点
+            }
+        });
+    })
+</script>
+</html>
